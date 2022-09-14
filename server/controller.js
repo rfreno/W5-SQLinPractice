@@ -24,14 +24,16 @@ module.exports = {
         join cc_users u on e.user_id = u.user_id
         where a.approved = true and a.completed = false
         order by a.date desc;`)
-            .then(dbRes => res.status(200).send(dbRes[0]))
+            .then(dbRes => {
+                // console.log(dbRes[0])
+                res.status(200).send(dbRes[0])})
             .catch(err => console.log(err))
     },
 
     approveAppointment: (req, res) => {
         let {apptId} = req.body
     
-        sequelize.query(`*****YOUR CODE HERE*****
+        sequelize.query(`UPDATE cc_appointments SET approved=true WHERE appt_id=${apptId};
         
         insert into cc_emp_appts (emp_id, appt_id)
         values (${nextEmp}, ${apptId}),
@@ -42,5 +44,38 @@ module.exports = {
                 nextEmp += 2
             })
             .catch(err => console.log(err))
+    },
+
+    getAllClients: (req, res) => {
+        sequelize.query(`SELECT * FROM cc_clients AS c JOIN cc_users AS u 
+        ON c.user_id = u.user_id;`)
+        .then(dbRes => res.status(200).send(dbRes[0]))
+        .catch(err => console.log(err))
+    },
+
+    getPendingAppointments: (req, res) => {
+        sequelize.query(`SELECT * FROM cc_appointments 
+        WHERE approved=false ORDER BY date;`)
+        .then(dbRes => {
+            res.status(200).send(dbRes[0])})
+        .catch(err => console.log(err))
+    },
+
+    getPastAppointments: (req, res) => {
+        sequelize.query(`SELECT a.appt_id, a.date, a.service_type, a.notes, u.first_name, u.last_name 
+        FROM cc_appointments AS a 
+        JOIN cc_clients AS c ON c.client_id = a.client_id
+        JOIN cc_users AS u ON u.user_id = c.user_id 
+        WHERE approved=true AND completed=true 
+        ORDER BY date DESC;`)
+        .then(dbRes => res.status(200).send(dbRes[0]))
+        .catch(err => console.log(err))
+    },
+    
+    completeAppointment: (req, res) => {
+        let {apptId} = req.body
+        sequelize.query(`UPDATE cc_appointments SET completed=true WHERE appt_id=${apptId};`)
+        .then(dbRes => res.status(200).send(dbRess[0]))
+        .catch(err => console.log(err))
     }
 }
